@@ -100,17 +100,31 @@ public class WeatherService {
 
 		var forecast = restClient.get().uri(points.properties().forecast()).retrieve().body(Forecast.class);
 
-		String forecastText = forecast.properties().periods().stream().map(p -> {
-			return String.format("""
-					%s:
-					Temperature: %s %s
-					Wind: %s %s
-					Forecast: %s
-					""", p.name(), p.temperature(), p.temperatureUnit(), p.windSpeed(), p.windDirection(),
-					p.detailedForecast());
-		}).collect(Collectors.joining());
+		StringBuilder forecastText = new StringBuilder("🌤️ Weather Forecast\n");
+		forecastText.append("----------------------------------------\n\n");
 
-		return forecastText;
+		forecastText.append(forecast.properties().periods().stream().map(p -> {
+			String precipProb = p.probabilityOfPrecipitation() != null && p.probabilityOfPrecipitation().get("value") != null
+					? p.probabilityOfPrecipitation().get("value") + "%"
+					: "N/A";
+			
+			return String.format("""
+					📅 %s
+					🌡️ Temperature: %d%s %s
+					💨 Wind: %s from %s
+					☔ Chance of Precipitation: %s
+					📝 Details: %s
+					
+					""", 
+					p.name(),
+					p.temperature(), p.temperatureUnit(), 
+					p.temperatureTrend() != null ? "(" + p.temperatureTrend() + ")" : "",
+					p.windSpeed(), p.windDirection(),
+					precipProb,
+					p.detailedForecast());
+		}).collect(Collectors.joining()));
+
+		return forecastText.toString();
 	}
 
 	/**
@@ -123,17 +137,35 @@ public class WeatherService {
 	public String getAlerts(String state) {
 		Alert alert = restClient.get().uri("/alerts/active/area/{state}", state).retrieve().body(Alert.class);
 
-		return alert.features()
+		if (alert.features().isEmpty()) {
+			return "✅ No active weather alerts for " + state;
+		}
+
+		StringBuilder alertText = new StringBuilder("⚠️ Weather Alerts for " + state + "\n");
+		alertText.append("----------------------------------------\n\n");
+
+		alertText.append(alert.features()
 			.stream()
 			.map(f -> String.format("""
-					Event: %s
-					Area: %s
-					Severity: %s
-					Description: %s
-					Instructions: %s
-					""", f.properties().event(), f.properties.areaDesc(), f.properties.severity(),
-					f.properties.description(), f.properties.instruction()))
-			.collect(Collectors.joining("\n"));
+					🚨 %s
+					📍 Area: %s
+					⚡ Severity: %s
+					
+					ℹ️ Description:
+					%s
+					
+					📢 Instructions:
+					%s
+					----------------------------------------
+					""", 
+					f.properties().event(),
+					f.properties.areaDesc(),
+					f.properties.severity(),
+					f.properties.description(),
+					f.properties.instruction() != null ? f.properties.instruction() : "No specific instructions provided."))
+			.collect(Collectors.joining("\n")));
+
+		return alertText.toString();
 	}
 
 	public static void main(String[] args) {
