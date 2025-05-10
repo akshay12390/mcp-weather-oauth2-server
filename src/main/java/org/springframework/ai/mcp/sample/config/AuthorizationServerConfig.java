@@ -7,6 +7,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -37,6 +38,9 @@ import com.nimbusds.jose.proc.SecurityContext;
 @EnableWebSecurity
 public class AuthorizationServerConfig {
 
+    @Value("${ISSUER_URI:http://localhost:8080}")
+    private String issuerUri;
+
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -57,7 +61,7 @@ public class AuthorizationServerConfig {
                 .clientSecret("{noop}secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri("http://localhost:8080/display-code")
+                .redirectUri(issuerUri + "/display-code")
                 .scope("weather.read")
                 .clientSettings(ClientSettings.builder()
                     .requireProofKey(true)
@@ -77,7 +81,7 @@ public class AuthorizationServerConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:8080")
+                .issuer(issuerUri)
                 .build();
     }
 
