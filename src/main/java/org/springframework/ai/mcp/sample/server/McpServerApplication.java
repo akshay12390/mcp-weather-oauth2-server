@@ -15,15 +15,36 @@
  */
 package org.springframework.ai.mcp.sample.server;
 
+import java.util.List;
+
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import io.modelcontextprotocol.server.McpServerFeatures;
+import io.modelcontextprotocol.spec.McpSchema;
+import io.modelcontextprotocol.spec.McpSchema.GetPromptResult;
+import io.modelcontextprotocol.spec.McpSchema.PromptMessage;
+import io.modelcontextprotocol.spec.McpSchema.Role;
+import io.modelcontextprotocol.spec.McpSchema.TextContent;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {
+	"org.springframework.ai.mcp.sample.server",
+	"org.springframework.ai.mcp.sample.config",
+	"org.springframework.ai.mcp.sample.controller",
+	"org.springframework.ai.mcp.sample.service",
+	"org.springframework.ai.mcp.sample.repository"
+})
+@EntityScan("org.springframework.ai.mcp.sample.entity")
+@EnableJpaRepositories("org.springframework.ai.mcp.sample.repository")
 public class McpServerApplication {
 
 	public static void main(String[] args) {
@@ -46,4 +67,20 @@ public class McpServerApplication {
 			.build();
 	}
 
+	@Bean
+	public List<McpServerFeatures.SyncPromptSpecification> myPrompts() {
+		var prompt = new McpSchema.Prompt("greeting", "A friendly greeting prompt",
+			List.of(new McpSchema.PromptArgument("name", "The name to greet", true)));
+
+		var promptSpecification = new McpServerFeatures.SyncPromptSpecification(prompt, (exchange, getPromptRequest) -> {
+			String nameArgument = (String) getPromptRequest.arguments().get("name");
+			if (nameArgument == null) { 
+				nameArgument = "friend"; 
+			}
+			var userMessage = new PromptMessage(Role.USER, new TextContent("Hello " + nameArgument + "! How can I assist you today?"));
+			return new GetPromptResult("A personalized greeting message", List.of(userMessage));
+		});
+
+    	return List.of(promptSpecification);
+	}
 }
