@@ -29,11 +29,11 @@ def main():
 
     # Client configuration
     client_id = 'mcp-client'
-    redirect_uri = 'http://localhost:8080/display-code'
+    redirect_uri = 'https://mcp-weather-oauth2-server-1e9dd0f77fe5.herokuapp.com/display-code'
 
     # Create authorization URL with PKCE
     auth_url = (
-        'http://localhost:8080/oauth2/authorize'
+        'https://mcp-weather-oauth2-server-1e9dd0f77fe5.herokuapp.com/oauth2/authorize'
         f'?response_type=code'
         f'&client_id={client_id}'
         f'&redirect_uri={redirect_uri}'

@@ -4,50 +4,59 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 import java.util.HashMap;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 public class AuthorizationServerMetadataController {
 
-    @Value("${server.port:8080}")
-    private int serverPort;
+    private final String serverUrl;
 
-    @Value("${server.servlet.context-path:}")
-    private String contextPath;
+    @Autowired
+    public AuthorizationServerMetadataController(String serverUrl) {
+        this.serverUrl = serverUrl;
+    }
 
     @GetMapping("/.well-known/oauth-authorization-server")
     public Map<String, Object> getMetadata() {
-        String baseUrl = String.format("http://localhost:%d%s", serverPort, contextPath);
-        
         Map<String, Object> metadata = new HashMap<>();
         
         // Required fields
-        metadata.put("issuer", baseUrl);
-        metadata.put("authorization_endpoint", baseUrl + "/oauth2/authorize");
-        metadata.put("token_endpoint", baseUrl + "/oauth2/token");
-        metadata.put("registration_endpoint", baseUrl + "/oauth2/register");
+        metadata.put("issuer", serverUrl);
+        metadata.put("authorization_endpoint", serverUrl + "/oauth2/authorize");
+        metadata.put("token_endpoint", serverUrl + "/oauth2/token");
+        metadata.put("registration_endpoint", serverUrl + "/oauth2/register");
+        metadata.put("device_authorization_endpoint", serverUrl + "/oauth2/device_authorization");
+        metadata.put("jwks_uri", serverUrl + "/oauth2/jwks");
         
         // Token endpoint authentication methods
         metadata.put("token_endpoint_auth_methods_supported", 
-            new String[]{"client_secret_basic", "client_secret_post"});
+            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt", 
+                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
         
         // Response types and grant types
-        metadata.put("response_types_supported", 
-            new String[]{"code", "token"});
+        metadata.put("response_types_supported", new String[]{"code"});
         metadata.put("grant_types_supported", 
-            new String[]{"authorization_code", "refresh_token", "client_credentials"});
-        
-        // Scopes
-        metadata.put("scopes_supported", 
-            new String[]{"openid", "profile", "email"});
+            new String[]{"authorization_code", "client_credentials", "refresh_token",
+                        "urn:ietf:params:oauth:grant-type:device_code",
+                        "urn:ietf:params:oauth:grant-type:token-exchange"});
         
         // PKCE
-        metadata.put("code_challenge_methods_supported", 
-            new String[]{"plain", "S256"});
+        metadata.put("code_challenge_methods_supported", new String[]{"S256"});
         
         // Additional endpoints
-        metadata.put("revocation_endpoint", baseUrl + "/oauth2/revoke");
-        metadata.put("introspection_endpoint", baseUrl + "/oauth2/introspect");
+        metadata.put("revocation_endpoint", serverUrl + "/oauth2/revoke");
+        metadata.put("introspection_endpoint", serverUrl + "/oauth2/introspect");
+        
+        // Revocation and introspection endpoint auth methods
+        metadata.put("revocation_endpoint_auth_methods_supported",
+            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt",
+                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
+        metadata.put("introspection_endpoint_auth_methods_supported",
+            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt",
+                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
+                        
+        // TLS client certificate binding
+        metadata.put("tls_client_certificate_bound_access_tokens", true);
         
         return metadata;
     }
