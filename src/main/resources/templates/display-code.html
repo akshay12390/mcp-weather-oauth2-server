@@ -12,17 +12,9 @@
                 document.getElementById('result').textContent = 'Error: Missing authorization code or state';
                 return;
             }
-
-            // Retrieve code verifier using state
-            const codeVerifier = localStorage.getItem(`cv_${state}`);
-            if (!codeVerifier) {
-                document.getElementById('result').textContent = 'Error: Code verifier not found in storage';
-                return;
-            }
             
             const result = {
                 authorization_code: code,
-                code_verifier: codeVerifier,
                 state: state,
                 redirect_uri: window.location.origin + '/display-code',
                 token_endpoint: window.location.origin + '/oauth2/token'
@@ -38,7 +30,7 @@
     --data-urlencode 'redirect_uri=${window.location.origin}/display-code' \\
     --data-urlencode 'client_id=mcp-client' \\
     --data-urlencode 'client_secret=secret' \\
-    --data-urlencode 'code_verifier=${codeVerifier}'`;
+    --data-urlencode 'code_verifier=<code-verifier>'`;
 
             document.getElementById('curl-command').textContent = curlCommand;
 
