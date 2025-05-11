@@ -29,16 +29,12 @@ public class AuthorizationServerMetadataController {
         metadata.put("jwks_uri", serverUrl + "/oauth2/jwks");
         
         // Token endpoint authentication methods
-        metadata.put("token_endpoint_auth_methods_supported", 
-            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt", 
-                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
+        metadata.put("token_endpoint_auth_methods_supported", new String[]{"client_secret_basic", "client_secret_post"});
         
         // Response types and grant types
         metadata.put("response_types_supported", new String[]{"code"});
         metadata.put("grant_types_supported", 
-            new String[]{"authorization_code", "client_credentials", "refresh_token",
-                        "urn:ietf:params:oauth:grant-type:device_code",
-                        "urn:ietf:params:oauth:grant-type:token-exchange"});
+            new String[]{"authorization_code", "client_credentials", "refresh_token"});
         
         // PKCE
         metadata.put("code_challenge_methods_supported", new String[]{"S256"});
@@ -49,11 +45,9 @@ public class AuthorizationServerMetadataController {
         
         // Revocation and introspection endpoint auth methods
         metadata.put("revocation_endpoint_auth_methods_supported",
-            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt",
-                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
+            new String[]{"client_secret_basic", "client_secret_post"});
         metadata.put("introspection_endpoint_auth_methods_supported",
-            new String[]{"client_secret_basic", "client_secret_post", "client_secret_jwt",
-                        "private_key_jwt", "tls_client_auth", "self_signed_tls_client_auth"});
+            new String[]{"client_secret_basic", "client_secret_post"});
                         
         // TLS client certificate binding
         metadata.put("tls_client_certificate_bound_access_tokens", true);

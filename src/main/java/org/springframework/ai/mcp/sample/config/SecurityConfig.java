@@ -19,6 +19,18 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
+    public SecurityFilterChain metadataSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/.well-known/oauth-authorization-server")
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().permitAll()
+            )
+            .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain resourceServerSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/sse/**", "/mcp/**")  // Apply to both SSE and MCP endpoints
@@ -35,9 +47,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)
+    @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+            .securityMatcher(request -> !request.getRequestURI().startsWith("/oauth2/"))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
                     "/",
@@ -45,11 +58,13 @@ public class SecurityConfig {
                     "/assets/**", 
                     "/webjars/**", 
                     "/login", 
-                    "/.well-known/oauth-authorization-server",
-                    "/error"
+                    "/error",
+                    "/h2-console/**"  // Allow H2 console access
                 ).permitAll()
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))  // Only disable CSRF for H2 console
+            .headers(headers -> headers.frameOptions().sameOrigin())  // Allow H2 console to work
             .formLogin(Customizer.withDefaults());
 
         return http.build();

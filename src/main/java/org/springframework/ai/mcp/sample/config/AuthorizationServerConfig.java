@@ -46,11 +46,16 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    @Order(1)
+    @Order(4)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-            .oidc(Customizer.withDefaults());
+        http.securityMatcher("/oauth2/**")  // Only match OAuth2 endpoints
+            .getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+            .oidc(Customizer.withDefaults())
+            // Enable token revocation endpoint
+            .tokenRevocationEndpoint(Customizer.withDefaults())
+            // Enable token introspection endpoint
+            .tokenIntrospectionEndpoint(Customizer.withDefaults());
 
         http.exceptionHandling(exceptions -> 
             exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
@@ -67,6 +72,7 @@ public class AuthorizationServerConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .redirectUri(serverUrl + "/display-code")
                 .redirectUri("https://localhost:7443/services/extidp/callback")
                 .redirectUri("https://258org.lightning.localhost.sfdcdev.force.com:7443//services/extidp/callback")
@@ -77,8 +83,10 @@ public class AuthorizationServerConfig {
                     .requireAuthorizationConsent(true)
                     .build())
                 .tokenSettings(TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofHours(1))
-                    .authorizationCodeTimeToLive(Duration.ofMinutes(10))
+                    .accessTokenTimeToLive(Duration.ofMinutes(15))
+                    .authorizationCodeTimeToLive(Duration.ofMinutes(30))
+                    .reuseRefreshTokens(false)
+                    .refreshTokenTimeToLive(Duration.ofDays(30))
                     .build())
                 .build();
 
@@ -91,6 +99,12 @@ public class AuthorizationServerConfig {
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
                 .issuer(serverUrl)
+                .authorizationEndpoint("/oauth2/authorize")
+                .tokenEndpoint("/oauth2/token")
+                .tokenRevocationEndpoint("/oauth2/revoke")
+                .tokenIntrospectionEndpoint("/oauth2/introspect")
+                .deviceAuthorizationEndpoint("/oauth2/device_authorization")
+                .jwkSetEndpoint("/oauth2/jwks")
                 .build();
     }
 
