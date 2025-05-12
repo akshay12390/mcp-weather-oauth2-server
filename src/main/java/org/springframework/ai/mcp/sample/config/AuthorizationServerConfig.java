@@ -77,6 +77,7 @@ public class AuthorizationServerConfig {
                 .redirectUri("https://localhost:7443/services/extidp/callback")
                 .redirectUri("https://258org.lightning.localhost.sfdcdev.force.com:7443//services/extidp/callback")
                 .redirectUri("https://orgfarm-4dd1893269.lightning.force-com.vbd3x3vv5lpu1mhkqiryz4y.wb.crm.dev:6101/services/extidp/callback")
+                .redirectUri("https://login.salesforce-com.vbd3x3vv5lpu1mhkqiryz4y.wb.crm.dev:6101/services/extidp/callback")
                 .scope("weather.read")
                 .clientSettings(ClientSettings.builder()
                     .requireProofKey(true)
