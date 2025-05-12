@@ -11,20 +11,33 @@ Run the project with:
 ./mvnw spring-boot:run
 ```
 
+### Client Credentials
 Obtain a token by calling the `/oauth2/token` endpoint:
 
 ```shell
 curl -XPOST "http://localhost:8080/oauth2/token" \
   --data grant_type=client_credentials \
-  --user "oidc-client:secret"
+  --user "mcp-client:secret"
 # And copy-paste the access token
 # Or use JQ:
 curl -XPOST "http://localhost:8080/oauth2/token" \
   --data grant_type=client_credentials \
-  --user "oidc-client:secret" | jq -r ".access_token"
+  --user "mcp-client:secret" | jq -r ".access_token"
 ```
 
-Store that token, and then boot up the MCP inspector:
+### Auth code with browser flow (PKCE)
+Obtain a auth code by first calling authorize endpoint
+```shell
+python3 pkce_generator.py
+```
+and then fetch access token by calling the `/oauth2/token` endpoint
+```shell
+python3 token_request.py
+```
+
+## Using MCP inspector
+
+Store the generated token in previous step, and then boot up the MCP inspector:
 
 ```shell
 npx @modelcontextprotocol/inspector@0.6.0
@@ -32,9 +45,7 @@ npx @modelcontextprotocol/inspector@0.6.0
 
 In the MCP inspector, paste your token. Click connect, and voilà!
 
-![MCP inspector](./mcp-inspector.png)
-
-Note that the token is only valid for 5 minutes
+Note that the token is valid for 15 minutes
 
 ## Implementation considerations
 
